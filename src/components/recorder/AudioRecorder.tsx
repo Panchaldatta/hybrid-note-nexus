@@ -1,41 +1,131 @@
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Mic, Square, Upload, Play, Pause } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "@/components/ui/use-toast";
 
 const AudioRecorder = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioSrc, setAudioSrc] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const handleStartRecording = () => {
-    setIsRecording(true);
-    // In a real app, we would start recording here
-    const interval = setInterval(() => {
-      setRecordingTime((prev) => prev + 1);
-    }, 1000);
-    
-    // For demo purposes, stop after 10 seconds
-    setTimeout(() => {
-      clearInterval(interval);
-      setIsRecording(false);
-      setAudioSrc("https://example.com/placeholder-audio.mp3");
-    }, 10000);
+  // Clean up on component unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      if (mediaRecorderRef.current && isRecording) {
+        mediaRecorderRef.current.stop();
+      }
+    };
+  }, [isRecording]);
+
+  const handleStartRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      
+      mediaRecorderRef.current.addEventListener("dataavailable", (event) => {
+        audioChunksRef.current.push(event.data);
+      });
+      
+      mediaRecorderRef.current.addEventListener("stop", () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/mpeg" });
+        setAudioBlob(audioBlob);
+        const audioUrl = URL.createObjectURL(audioBlob);
+        setAudioSrc(audioUrl);
+        
+        // Stop all tracks to release microphone
+        stream.getTracks().forEach(track => track.stop());
+      });
+      
+      // Start recording
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
+      
+      // Start timer
+      setRecordingTime(0);
+      timerRef.current = window.setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+      
+      toast({
+        title: "Recording started",
+        description: "Your audio is now being recorded"
+      });
+    } catch (error) {
+      console.error("Error accessing microphone:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not access microphone. Please check permissions."
+      });
+    }
   };
 
   const handleStopRecording = () => {
-    setIsRecording(false);
-    // In a real app, we would stop recording here
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      
+      toast({
+        title: "Recording stopped",
+        description: `Recorded ${formatTime(recordingTime)}`
+      });
+    }
   };
 
   const handleUploadAudio = () => {
-    // In a real app, we would trigger a file upload here
-    setTimeout(() => {
-      setAudioSrc("https://example.com/placeholder-audio.mp3");
-    }, 1000);
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "audio/*";
+    
+    input.onchange = (e) => {
+      const target = e.target as HTMLInputElement;
+      if (target.files && target.files[0]) {
+        const file = target.files[0];
+        const audioUrl = URL.createObjectURL(file);
+        setAudioSrc(audioUrl);
+        setAudioBlob(file);
+        toast({
+          title: "Audio uploaded",
+          description: `File: ${file.name}`
+        });
+      }
+    };
+    
+    input.click();
+  };
+
+  const togglePlayback = () => {
+    if (!audioRef.current) return;
+    
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
+    setIsPlaying(!isPlaying);
   };
 
   const formatTime = (timeInSeconds: number) => {
@@ -44,9 +134,28 @@ const AudioRecorder = () => {
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const togglePlayback = () => {
-    setIsPlaying(!isPlaying);
-  };
+  // Initialize audio element when source changes
+  useEffect(() => {
+    if (audioSrc) {
+      if (!audioRef.current) {
+        audioRef.current = new Audio(audioSrc);
+        
+        audioRef.current.addEventListener("ended", () => {
+          setIsPlaying(false);
+        });
+        
+        audioRef.current.addEventListener("play", () => {
+          setIsPlaying(true);
+        });
+        
+        audioRef.current.addEventListener("pause", () => {
+          setIsPlaying(false);
+        });
+      } else {
+        audioRef.current.src = audioSrc;
+      }
+    }
+  }, [audioSrc]);
 
   return (
     <Card className="p-6 flex flex-col items-center">
@@ -111,7 +220,7 @@ const AudioRecorder = () => {
             </Button>
             <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
               <div 
-                className="h-full bg-primary" 
+                className="h-full bg-primary transition-all" 
                 style={{ width: isPlaying ? "45%" : "0%" }}
               />
             </div>

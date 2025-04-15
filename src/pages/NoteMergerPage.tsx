@@ -5,24 +5,124 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TranscriptViewer from "@/components/notes/TranscriptViewer";
 import { Download, Share2, Save, ArrowRight, ArrowLeft, Pin } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
+import { addNote } from "@/services/mongodb";
+import { useNavigate } from "react-router-dom";
 
 const NoteMergerPage = () => {
   const [activeTab, setActiveTab] = useState("editor");
+  const [title, setTitle] = useState("Hybrid Note");
+  const [isDirty, setIsDirty] = useState(false);
+  const navigate = useNavigate();
+  
+  const handleSaveDraft = () => {
+    setIsDirty(true);
+    toast({
+      title: "Draft saved",
+      description: "Your hybrid note draft has been saved"
+    });
+  };
+  
+  const handleExport = () => {
+    toast({
+      title: "Exporting document",
+      description: "Your hybrid note is being prepared for export"
+    });
+    
+    // Simulate export delay
+    setTimeout(() => {
+      toast({
+        title: "Export complete",
+        description: "Your hybrid note has been exported successfully"
+      });
+    }, 1500);
+  };
+  
+  const handleShare = () => {
+    if (!navigator.share) {
+      toast({
+        title: "Sharing not supported",
+        description: "Web Share API is not supported in your browser"
+      });
+      return;
+    }
+    
+    navigator.share({
+      title: "Shared Note",
+      text: "Check out my hybrid note from NoteFusion!",
+      url: window.location.href,
+    })
+    .then(() => {
+      toast({
+        title: "Shared successfully",
+        description: "Your note has been shared"
+      });
+    })
+    .catch((error) => {
+      console.error("Error sharing:", error);
+      toast({
+        variant: "destructive",
+        title: "Sharing failed",
+        description: "There was an error sharing your note"
+      });
+    });
+  };
+  
+  const handlePinToTranscript = () => {
+    toast({
+      title: "Image pinned",
+      description: "Image has been pinned to the current transcript position"
+    });
+  };
+  
+  const handleFinishMerge = async () => {
+    try {
+      // Generate current date in format "Month Day, Year"
+      const now = new Date();
+      const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+      const formattedDate = now.toLocaleDateString('en-US', options);
+      
+      // Create a new hybrid note
+      const newNote = {
+        title,
+        date: formattedDate,
+        type: 'hybrid' as const,
+        excerpt: "Combined audio transcript with handwritten notes...",
+      };
+      
+      await addNote(newNote);
+      
+      toast({
+        title: "Hybrid note created",
+        description: "Your hybrid note has been saved successfully"
+      });
+      
+      // Navigate to the notes page
+      navigate('/notes');
+    } catch (error) {
+      console.error("Error creating hybrid note:", error);
+      toast({
+        variant: "destructive",
+        title: "Error saving note",
+        description: "There was a problem saving your hybrid note. Please try again."
+      });
+    }
+  };
   
   return (
     <div className="container mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Note Merger</h1>
         <div className="flex gap-2">
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2" onClick={handleSaveDraft}>
             <Save className="h-4 w-4" />
             Save Draft
           </Button>
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2" onClick={handleExport}>
             <Download className="h-4 w-4" />
             Export
           </Button>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={handleShare}>
             <Share2 className="h-4 w-4" />
             Share
           </Button>
@@ -33,7 +133,7 @@ const NoteMergerPage = () => {
         Merge audio transcripts with scanned notes to create comprehensive study materials.
       </p>
       
-      <Tabs defaultValue="editor" onValueChange={setActiveTab}>
+      <Tabs defaultValue="editor" onValueChange={setActiveTab} value={activeTab}>
         <TabsList className="mb-6">
           <TabsTrigger value="editor">Editor</TabsTrigger>
           <TabsTrigger value="preview">Preview</TabsTrigger>
@@ -74,6 +174,7 @@ const NoteMergerPage = () => {
                       size="sm" 
                       className="absolute top-4 right-4"
                       variant="secondary"
+                      onClick={handlePinToTranscript}
                     >
                       <Pin className="h-4 w-4 mr-1" />
                       Pin to Transcript
@@ -93,6 +194,12 @@ const NoteMergerPage = () => {
                 </CardContent>
               </Card>
             </div>
+          </div>
+          
+          <div className="mt-8 flex justify-center">
+            <Button size="lg" onClick={handleFinishMerge}>
+              Finish & Save Hybrid Note
+            </Button>
           </div>
         </TabsContent>
         

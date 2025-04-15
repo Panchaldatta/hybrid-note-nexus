@@ -38,17 +38,52 @@ const mockNotes: Note[] = [
   }
 ];
 
+// Get all notes
 export const getNotes = async (): Promise<Note[]> => {
+  console.log("Fetching notes...");
+  // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));
   return [...mockNotes];
 };
 
+// Add a new note
 export const addNote = async (note: Omit<Note, 'id'>): Promise<Note> => {
+  console.log("Adding note:", note);
+  
+  // Generate a random ID (in a real app this would be handled by MongoDB)
   const newNote = {
     ...note,
     id: Math.random().toString(36).substring(2, 15),
   };
   
-  mockNotes.push(newNote);
+  // Add to mock database
+  mockNotes.unshift(newNote); // Add to beginning of array
+  
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 300));
   return newNote;
+};
+
+// Get a note by ID
+export const getNoteById = async (id: string): Promise<Note | undefined> => {
+  console.log("Fetching note by ID:", id);
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 300));
+  return mockNotes.find(note => note.id === id);
+};
+
+// Delete a note
+export const deleteNote = async (id: string): Promise<boolean> => {
+  console.log("Deleting note:", id);
+  const initialLength = mockNotes.length;
+  const index = mockNotes.findIndex(note => note.id === id);
+  
+  if (index !== -1) {
+    mockNotes.splice(index, 1);
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    return true;
+  }
+  
+  return false;
 };
