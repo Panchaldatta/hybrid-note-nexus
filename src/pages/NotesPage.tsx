@@ -1,9 +1,10 @@
-
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, Mic, FileText, Share2, MoreHorizontal, Search, Plus } from "lucide-react";
+import { Note, getNotes } from "@/services/mongodb";
 
 const notesList = [
   {
@@ -91,6 +92,23 @@ const NoteCard = ({ note }: { note: typeof notesList[0] }) => {
 };
 
 const NotesPage = () => {
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchNotes = async () => {
+      const fetchedNotes = await getNotes();
+      setNotes(fetchedNotes);
+      setIsLoading(false);
+    };
+
+    fetchNotes();
+  }, []);
+
+  if (isLoading) {
+    return <div className="container mx-auto">Loading notes...</div>;
+  }
+
   return (
     <div className="container mx-auto">
       <div className="flex justify-between items-center mb-8">
