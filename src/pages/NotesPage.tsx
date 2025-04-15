@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,46 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, Mic, FileText, Share2, MoreHorizontal, Search, Plus } from "lucide-react";
 import { Note, getNotes } from "@/services/mongodb";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const notesList = [
-  {
-    id: "1",
-    title: "Quantum Mechanics Lecture",
-    date: "April 15, 2025",
-    type: "audio",
-    excerpt: "Wave-particle duality and the double-slit experiment..."
-  },
-  {
-    id: "2",
-    title: "Calculus Notes",
-    date: "April 14, 2025",
-    type: "scan",
-    excerpt: "Integration by parts and applications..."
-  },
-  {
-    id: "3",
-    title: "History of Computing",
-    date: "April 10, 2025",
-    type: "hybrid",
-    excerpt: "The evolution of computers from vacuum tubes to..."
-  },
-  {
-    id: "4",
-    title: "Organic Chemistry",
-    date: "April 8, 2025",
-    type: "audio",
-    excerpt: "Functional groups and their reactions..."
-  },
-  {
-    id: "5",
-    title: "Linear Algebra",
-    date: "April 5, 2025",
-    type: "scan",
-    excerpt: "Vector spaces and linear transformations..."
-  },
-];
-
-const NoteCard = ({ note }: { note: typeof notesList[0] }) => {
+const NoteCard = ({ note }: { note: Note }) => {
   const getIcon = () => {
     switch (note.type) {
       case "audio":
@@ -91,23 +55,48 @@ const NoteCard = ({ note }: { note: typeof notesList[0] }) => {
   );
 };
 
+// Loading skeleton component for cards
+const NoteCardSkeleton = () => (
+  <Card>
+    <CardHeader>
+      <Skeleton className="h-6 w-3/4 mb-2" />
+      <Skeleton className="h-4 w-1/2" />
+    </CardHeader>
+    <CardContent>
+      <Skeleton className="h-4 w-full mb-2" />
+      <Skeleton className="h-4 w-full mb-2" />
+      <Skeleton className="h-4 w-3/4" />
+    </CardContent>
+    <CardFooter className="flex gap-2">
+      <Skeleton className="h-9 w-full" />
+      <Skeleton className="h-9 w-10" />
+    </CardFooter>
+  </Card>
+);
+
 const NotesPage = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("all");
 
   useEffect(() => {
     const fetchNotes = async () => {
-      const fetchedNotes = await getNotes();
-      setNotes(fetchedNotes);
-      setIsLoading(false);
+      try {
+        const fetchedNotes = await getNotes();
+        setNotes(fetchedNotes);
+      } catch (error) {
+        console.error("Failed to fetch notes:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     fetchNotes();
   }, []);
 
-  if (isLoading) {
-    return <div className="container mx-auto">Loading notes...</div>;
-  }
+  const filteredNotes = activeTab === "all" 
+    ? notes 
+    : notes.filter(note => note.type === activeTab.replace('ed', ''));
 
   return (
     <div className="container mx-auto">
@@ -130,7 +119,7 @@ const NotesPage = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="all">
+      <Tabs defaultValue="all" onValueChange={setActiveTab}>
         <TabsList className="mb-4">
           <TabsTrigger value="all">All Notes</TabsTrigger>
           <TabsTrigger value="audio">Audio</TabsTrigger>
@@ -138,37 +127,39 @@ const NotesPage = () => {
           <TabsTrigger value="hybrid">Hybrid</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="all">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {notesList.map((note) => (
-              <NoteCard key={note.id} note={note} />
-            ))}
-          </div>
+        <TabsContent value="all" className="mt-0">
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[1, 2, 3, 4, 5, 6].map((index) => (
+                <NoteCardSkeleton key={index} />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredNotes.map((note) => (
+                <NoteCard key={note.id} note={note} />
+              ))}
+            </div>
+          )}
         </TabsContent>
 
-        <TabsContent value="audio">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {notesList.filter(note => note.type === "audio").map((note) => (
-              <NoteCard key={note.id} note={note} />
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="scanned">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {notesList.filter(note => note.type === "scan").map((note) => (
-              <NoteCard key={note.id} note={note} />
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="hybrid">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {notesList.filter(note => note.type === "hybrid").map((note) => (
-              <NoteCard key={note.id} note={note} />
-            ))}
-          </div>
-        </TabsContent>
+        {["audio", "scanned", "hybrid"].map((tabValue) => (
+          <TabsContent key={tabValue} value={tabValue} className="mt-0">
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[1, 2, 3].map((index) => (
+                  <NoteCardSkeleton key={index} />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredNotes.map((note) => (
+                  <NoteCard key={note.id} note={note} />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        ))}
       </Tabs>
     </div>
   );
