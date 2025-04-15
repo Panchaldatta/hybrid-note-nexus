@@ -1,9 +1,35 @@
 
 import { Button } from "@/components/ui/button";
 import { Plus, User } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useState } from "react";
 
 const Header = () => {
+  const navigate = useNavigate();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleNewNote = (type: 'audio' | 'scan' | 'hybrid') => {
+    setIsDialogOpen(false);
+    switch (type) {
+      case 'audio':
+        navigate('/recorder');
+        break;
+      case 'scan':
+        navigate('/scanner');
+        break;
+      case 'hybrid':
+        navigate('/merger');
+        break;
+    }
+  };
+
   return (
     <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
       <div className="flex h-16 items-center px-4 md:px-6">
@@ -30,10 +56,30 @@ const Header = () => {
             <User className="h-4 w-4" />
             <span>Account</span>
           </Button>
-          <Button size="sm" className="flex items-center gap-1">
-            <Plus className="h-4 w-4" />
-            <span>New Note</span>
-          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="flex items-center gap-1">
+                <Plus className="h-4 w-4" />
+                <span>New Note</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Note</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <Button onClick={() => handleNewNote('audio')} className="flex items-center gap-2 justify-start">
+                  Record Audio Note
+                </Button>
+                <Button onClick={() => handleNewNote('scan')} className="flex items-center gap-2 justify-start">
+                  Scan Written Notes
+                </Button>
+                <Button onClick={() => handleNewNote('hybrid')} className="flex items-center gap-2 justify-start">
+                  Create Hybrid Note
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </header>

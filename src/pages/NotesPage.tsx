@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, Mic, FileText, Share2, MoreHorizontal, Search, Plus } from "lucide-react";
 import { Note, getNotes } from "@/services/mongodb";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useNavigate } from "react-router-dom";
 
 const NoteCard = ({ note }: { note: Note }) => {
   const getIcon = () => {
@@ -55,7 +55,6 @@ const NoteCard = ({ note }: { note: Note }) => {
   );
 };
 
-// Loading skeleton component for cards
 const NoteCardSkeleton = () => (
   <Card>
     <CardHeader>
@@ -78,6 +77,7 @@ const NotesPage = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchNotes = async () => {
@@ -98,11 +98,25 @@ const NotesPage = () => {
     ? notes 
     : notes.filter(note => note.type === activeTab.replace('ed', ''));
 
+  const handleCreateNote = (type: 'audio' | 'scan' | 'hybrid') => {
+    switch (type) {
+      case 'audio':
+        navigate('/recorder');
+        break;
+      case 'scan':
+        navigate('/scanner');
+        break;
+      case 'hybrid':
+        navigate('/merger');
+        break;
+    }
+  };
+
   return (
     <div className="container mx-auto">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">My Notes</h1>
-        <Button className="gap-2">
+        <Button onClick={() => handleCreateNote('audio')} className="gap-2">
           <Plus className="h-4 w-4" />
           New Note
         </Button>
@@ -130,7 +144,7 @@ const NotesPage = () => {
         <TabsContent value="all" className="mt-0">
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[1, 2, 3, 4, 5, 6].map((index) => (
+              {[1, 2, 3].map((index) => (
                 <NoteCardSkeleton key={index} />
               ))}
             </div>
@@ -147,7 +161,7 @@ const NotesPage = () => {
           <TabsContent key={tabValue} value={tabValue} className="mt-0">
             {isLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[1, 2, 3].map((index) => (
+                {[1, 2].map((index) => (
                   <NoteCardSkeleton key={index} />
                 ))}
               </div>
