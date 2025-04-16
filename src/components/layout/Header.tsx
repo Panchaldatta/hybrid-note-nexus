@@ -15,7 +15,7 @@ const Header = () => {
   const navigate = useNavigate();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handleNewNote = (type: 'audio' | 'scan' | 'hybrid') => {
+  const handleNewNote = (type: 'audio' | 'scan') => {
     setIsDialogOpen(false);
     switch (type) {
       case 'audio':
@@ -23,9 +23,6 @@ const Header = () => {
         break;
       case 'scan':
         navigate('/scanner');
-        break;
-      case 'hybrid':
-        navigate('/merger');
         break;
     }
   };
@@ -46,9 +43,6 @@ const Header = () => {
           </Link>
           <Link to="/scanner" className="text-muted-foreground transition-colors hover:text-foreground">
             Scanner
-          </Link>
-          <Link to="/merger" className="text-muted-foreground transition-colors hover:text-foreground">
-            Merger
           </Link>
         </nav>
         <div className="ml-auto flex items-center gap-2">
@@ -73,9 +67,6 @@ const Header = () => {
                 </Button>
                 <Button onClick={() => handleNewNote('scan')} className="flex items-center gap-2 justify-start">
                   Scan Written Notes
-                </Button>
-                <Button onClick={() => handleNewNote('hybrid')} className="flex items-center gap-2 justify-start">
-                  Create Hybrid Note
                 </Button>
               </div>
             </DialogContent>

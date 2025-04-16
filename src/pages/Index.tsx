@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Mic, FileText, BookOpen, ArrowRight } from "lucide-react";
+import { Mic, FileText, ArrowRight } from "lucide-react";
 
 const Index = () => {
   return (
@@ -59,15 +59,25 @@ const Index = () => {
       {/* Features Section */}
       <section className="py-24 bg-gradient-to-b from-background to-accent/10">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Powerful Note-Taking Tools</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Capture your thoughts with our intuitive tools designed for every learning style
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-background/50 backdrop-blur-sm p-8 rounded-2xl border shadow-lg">
               <div className="bg-primary/10 p-3 rounded-full w-fit mb-4">
                 <Mic className="h-6 w-6 text-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-3">Audio Recording</h3>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground mb-4">
                 Record lectures with automatic transcription and speaker detection.
               </p>
+              <Button variant="outline" asChild>
+                <Link to="/recorder">Try Recorder</Link>
+              </Button>
             </div>
 
             <div className="bg-background/50 backdrop-blur-sm p-8 rounded-2xl border shadow-lg">
@@ -75,19 +85,12 @@ const Index = () => {
                 <FileText className="h-6 w-6 text-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-3">Note Scanning</h3>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground mb-4">
                 Convert handwritten notes into searchable digital text instantly.
               </p>
-            </div>
-
-            <div className="bg-background/50 backdrop-blur-sm p-8 rounded-2xl border shadow-lg">
-              <div className="bg-primary/10 p-3 rounded-full w-fit mb-4">
-                <BookOpen className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Smart Fusion</h3>
-              <p className="text-muted-foreground">
-                Combine audio transcripts with scanned notes seamlessly.
-              </p>
+              <Button variant="outline" asChild>
+                <Link to="/scanner">Try Scanner</Link>
+              </Button>
             </div>
           </div>
         </div>

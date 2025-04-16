@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,7 +10,6 @@ import NotFound from "./pages/NotFound";
 import RecorderPage from "./pages/RecorderPage";
 import ScannerPage from "./pages/ScannerPage";
 import NotesPage from "./pages/NotesPage";
-import NoteMergerPage from "./pages/NoteMergerPage";
 
 const queryClient = new QueryClient();
 
@@ -25,7 +25,6 @@ const App = () => (
             <Route path="/recorder" element={<RecorderPage />} />
             <Route path="/scanner" element={<ScannerPage />} />
             <Route path="/notes" element={<NotesPage />} />
-            <Route path="/merger" element={<NoteMergerPage />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

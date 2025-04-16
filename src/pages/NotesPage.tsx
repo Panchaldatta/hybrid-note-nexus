@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,8 +16,6 @@ const NoteCard = ({ note }: { note: Note }) => {
         return <Mic className="h-4 w-4" />;
       case "scan":
         return <FileText className="h-4 w-4" />;
-      case "hybrid":
-        return <BookOpen className="h-4 w-4" />;
       default:
         return <FileText className="h-4 w-4" />;
     }
@@ -98,16 +97,13 @@ const NotesPage = () => {
     ? notes 
     : notes.filter(note => note.type === activeTab.replace('ed', ''));
 
-  const handleCreateNote = (type: 'audio' | 'scan' | 'hybrid') => {
+  const handleCreateNote = (type: 'audio' | 'scan') => {
     switch (type) {
       case 'audio':
         navigate('/recorder');
         break;
       case 'scan':
         navigate('/scanner');
-        break;
-      case 'hybrid':
-        navigate('/merger');
         break;
     }
   };
@@ -116,10 +112,16 @@ const NotesPage = () => {
     <div className="container mx-auto">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">My Notes</h1>
-        <Button onClick={() => handleCreateNote('audio')} className="gap-2">
-          <Plus className="h-4 w-4" />
-          New Note
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => handleCreateNote('audio')} variant="outline" className="gap-2">
+            <Mic className="h-4 w-4" />
+            New Audio Note
+          </Button>
+          <Button onClick={() => handleCreateNote('scan')} className="gap-2">
+            <FileText className="h-4 w-4" />
+            New Scan
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -138,7 +140,6 @@ const NotesPage = () => {
           <TabsTrigger value="all">All Notes</TabsTrigger>
           <TabsTrigger value="audio">Audio</TabsTrigger>
           <TabsTrigger value="scanned">Scanned</TabsTrigger>
-          <TabsTrigger value="hybrid">Hybrid</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="mt-0">
@@ -157,7 +158,7 @@ const NotesPage = () => {
           )}
         </TabsContent>
 
-        {["audio", "scanned", "hybrid"].map((tabValue) => (
+        {["audio", "scanned"].map((tabValue) => (
           <TabsContent key={tabValue} value={tabValue} className="mt-0">
             {isLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

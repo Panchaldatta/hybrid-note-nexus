@@ -40,7 +40,6 @@ const Sidebar = () => {
           <SidebarItem icon={Mic} label="Record Audio" href="/recorder" />
           <SidebarItem icon={FileText} label="Upload Audio" href="/upload-audio" />
           <SidebarItem icon={Image} label="Scan Notes" href="/scanner" />
-          <SidebarItem icon={BookOpen} label="Note Merger" href="/merger" />
           
           <h3 className="mb-2 mt-6 px-4 text-sm font-semibold">Library</h3>
           <SidebarItem icon={BookOpen} label="All Notes" href="/notes" />

@@ -6,7 +6,7 @@ export interface Note {
   id: string;
   title: string;
   date: string;
-  type: 'audio' | 'scan' | 'hybrid';
+  type: 'audio' | 'scan';
   excerpt: string;
   content?: string;
   audioUrl?: string;
@@ -28,13 +28,6 @@ const mockNotes: Note[] = [
     date: "April 14, 2025",
     type: "scan",
     excerpt: "Integration by parts and applications..."
-  },
-  {
-    id: "3",
-    title: "History of Computing",
-    date: "April 10, 2025",
-    type: "hybrid",
-    excerpt: "The evolution of computers from vacuum tubes to..."
   }
 ];
 
