@@ -20,14 +20,38 @@ const mockNotes: Note[] = [
     title: "Quantum Mechanics Lecture",
     date: "April 15, 2025",
     type: "audio",
-    excerpt: "Wave-particle duality and the double-slit experiment..."
+    excerpt: "Wave-particle duality and the double-slit experiment...",
+    audioUrl: "https://example.com/audio/lecture1.mp3",
+    content: "Full lecture content on quantum mechanics and its applications."
   },
   {
     id: "2",
     title: "Calculus Notes",
     date: "April 14, 2025",
     type: "scan",
-    excerpt: "Integration by parts and applications..."
+    excerpt: "Integration by parts and applications...",
+    imageUrls: [
+      "https://images.unsplash.com/photo-1635070041078-e363dbe005cb",
+      "https://images.unsplash.com/photo-1621452773781-0f992fd1f5cb"
+    ]
+  },
+  {
+    id: "3",
+    title: "Machine Learning Seminar",
+    date: "April 10, 2025",
+    type: "audio",
+    excerpt: "Introduction to neural networks and deep learning frameworks...",
+    audioUrl: "https://example.com/audio/seminar2.mp3"
+  },
+  {
+    id: "4",
+    title: "Biology Study Notes",
+    date: "April 8, 2025",
+    type: "scan",
+    excerpt: "Cell structure and function, mitosis and meiosis processes...",
+    imageUrls: [
+      "https://images.unsplash.com/photo-1530026405186-ed1f139313f8"
+    ]
   }
 ];
 

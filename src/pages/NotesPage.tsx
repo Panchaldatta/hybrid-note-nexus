@@ -8,8 +8,11 @@ import { BookOpen, Mic, FileText, Share2, MoreHorizontal, Search, Plus } from "l
 import { Note, getNotes } from "@/services/mongodb";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import TranscriptViewer from "@/components/notes/TranscriptViewer";
+import { toast } from "sonner";
 
-const NoteCard = ({ note }: { note: Note }) => {
+const NoteCard = ({ note, onOpen, onShare }: { note: Note, onOpen: (note: Note) => void, onShare: (note: Note) => void }) => {
   const getIcon = () => {
     switch (note.type) {
       case "audio":
@@ -45,8 +48,8 @@ const NoteCard = ({ note }: { note: Note }) => {
         <p className="line-clamp-3 text-muted-foreground text-sm">{note.excerpt}</p>
       </CardContent>
       <CardFooter className="flex gap-2">
-        <Button size="sm" variant="outline" className="flex-1">Open</Button>
-        <Button size="sm" variant="outline">
+        <Button size="sm" variant="outline" className="flex-1" onClick={() => onOpen(note)}>Open</Button>
+        <Button size="sm" variant="outline" onClick={() => onShare(note)}>
           <Share2 className="h-4 w-4" />
         </Button>
       </CardFooter>
@@ -76,6 +79,8 @@ const NotesPage = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [isNoteOpen, setIsNoteOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -105,6 +110,28 @@ const NotesPage = () => {
       case 'scan':
         navigate('/scanner');
         break;
+    }
+  };
+
+  const handleOpenNote = (note: Note) => {
+    setSelectedNote(note);
+    setIsNoteOpen(true);
+  };
+
+  const handleShareNote = (note: Note) => {
+    // In a real app, this would open a share dialog or implement sharing functionality
+    // For now, we'll just show a toast notification
+    if (navigator.share) {
+      navigator.share({
+        title: note.title,
+        text: `Check out my note: ${note.title}`,
+        url: window.location.href,
+      })
+      .then(() => toast.success("Shared successfully"))
+      .catch((error) => toast.error("Error sharing: " + error));
+    } else {
+      // Fallback for browsers that don't support the Web Share API
+      toast.success(`Sharing "${note.title}" (Web Share API not supported in this browser)`);
     }
   };
 
@@ -152,7 +179,12 @@ const NotesPage = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredNotes.map((note) => (
-                <NoteCard key={note.id} note={note} />
+                <NoteCard 
+                  key={note.id} 
+                  note={note} 
+                  onOpen={handleOpenNote} 
+                  onShare={handleShareNote} 
+                />
               ))}
             </div>
           )}
@@ -169,13 +201,47 @@ const NotesPage = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredNotes.map((note) => (
-                  <NoteCard key={note.id} note={note} />
+                  <NoteCard 
+                    key={note.id} 
+                    note={note} 
+                    onOpen={handleOpenNote} 
+                    onShare={handleShareNote}
+                  />
                 ))}
               </div>
             )}
           </TabsContent>
         ))}
       </Tabs>
+
+      {/* Note viewing dialog */}
+      <Dialog open={isNoteOpen} onOpenChange={setIsNoteOpen}>
+        <DialogContent className="max-w-4xl h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedNote?.title}</DialogTitle>
+          </DialogHeader>
+          {selectedNote?.type === "audio" ? (
+            <TranscriptViewer title={selectedNote.title} />
+          ) : (
+            <div className="p-4">
+              <h3 className="text-lg font-medium mb-2">{selectedNote?.title}</h3>
+              <p>{selectedNote?.excerpt}</p>
+              {selectedNote?.imageUrls && selectedNote.imageUrls.length > 0 && (
+                <div className="mt-4">
+                  {selectedNote.imageUrls.map((url, index) => (
+                    <img 
+                      key={index} 
+                      src={url} 
+                      alt={`Scan ${index + 1}`} 
+                      className="my-4 max-w-full rounded-md shadow-md" 
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
