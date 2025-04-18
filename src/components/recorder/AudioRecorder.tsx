@@ -1,10 +1,10 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Mic, Square, Upload, Play, Pause } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
+import { saveAudioRecording } from "@/services/mongodb";
 
 const AudioRecorder = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -18,7 +18,6 @@ const AudioRecorder = () => {
   const timerRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Clean up on component unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) {
@@ -44,37 +43,39 @@ const AudioRecorder = () => {
         audioChunksRef.current.push(event.data);
       });
       
-      mediaRecorderRef.current.addEventListener("stop", () => {
+      mediaRecorderRef.current.addEventListener("stop", async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: "audio/mpeg" });
-        setAudioBlob(audioBlob);
-        const audioUrl = URL.createObjectURL(audioBlob);
-        setAudioSrc(audioUrl);
         
-        // Stop all tracks to release microphone
+        const reader = new FileReader();
+        reader.readAsDataURL(audioBlob);
+        reader.onloadend = async () => {
+          const base64Audio = reader.result as string;
+          try {
+            const savedNote = await saveAudioRecording(base64Audio, recordingTime);
+            setAudioSrc(URL.createObjectURL(audioBlob));
+            setAudioBlob(audioBlob);
+            toast.success("Recording saved successfully");
+          } catch (error) {
+            console.error("Error saving recording:", error);
+            toast.error("Failed to save recording");
+          }
+        };
+        
         stream.getTracks().forEach(track => track.stop());
       });
       
-      // Start recording
       mediaRecorderRef.current.start();
       setIsRecording(true);
       
-      // Start timer
       setRecordingTime(0);
       timerRef.current = window.setInterval(() => {
         setRecordingTime(prev => prev + 1);
       }, 1000);
       
-      toast({
-        title: "Recording started",
-        description: "Your audio is now being recorded"
-      });
+      toast.success("Recording started");
     } catch (error) {
       console.error("Error accessing microphone:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not access microphone. Please check permissions."
-      });
+      toast.error("Could not access microphone. Please check permissions.");
     }
   };
 
@@ -88,10 +89,7 @@ const AudioRecorder = () => {
         timerRef.current = null;
       }
       
-      toast({
-        title: "Recording stopped",
-        description: `Recorded ${formatTime(recordingTime)}`
-      });
+      toast.success("Recording stopped");
     }
   };
 
@@ -107,10 +105,7 @@ const AudioRecorder = () => {
         const audioUrl = URL.createObjectURL(file);
         setAudioSrc(audioUrl);
         setAudioBlob(file);
-        toast({
-          title: "Audio uploaded",
-          description: `File: ${file.name}`
-        });
+        toast.success("Audio uploaded");
       }
     };
     
@@ -134,7 +129,6 @@ const AudioRecorder = () => {
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  // Initialize audio element when source changes
   useEffect(() => {
     if (audioSrc) {
       if (!audioRef.current) {

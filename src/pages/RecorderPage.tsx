@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import AudioRecorder from "@/components/recorder/AudioRecorder";
 import TranscriptViewer from "@/components/notes/TranscriptViewer";
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { addNote } from "@/services/mongodb";
 import { useNavigate } from "react-router-dom";
 
@@ -21,36 +20,24 @@ const RecorderPage = () => {
   
   const saveNote = async () => {
     try {
-      // Generate current date in format "Month Day, Year"
       const now = new Date();
       const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
       const formattedDate = now.toLocaleDateString('en-US', options);
       
-      // Create a new note object
       const newNote = {
         title,
         date: formattedDate,
         type: 'audio' as const,
         excerpt: transcript ? transcript.substring(0, 100) + "..." : "Audio recording",
-        content: transcript || undefined
+        content: transcript || "Audio recording without transcript"
       };
       
       await addNote(newNote);
-      
-      toast({
-        title: "Note saved successfully",
-        description: "Your audio note has been saved"
-      });
-      
-      // Navigate to the notes page
+      toast.success("Note saved successfully");
       navigate('/notes');
     } catch (error) {
       console.error("Error saving note:", error);
-      toast({
-        variant: "destructive",
-        title: "Error saving note",
-        description: "There was a problem saving your note. Please try again."
-      });
+      toast.error("Error saving note. Please try again.");
     }
   };
   

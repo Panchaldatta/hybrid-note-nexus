@@ -1,4 +1,3 @@
-
 // Note: This is a mock implementation for frontend use
 // In a real application, you would use an API to communicate with MongoDB
 
@@ -11,6 +10,14 @@ export interface Note {
   content?: string;
   audioUrl?: string;
   imageUrls?: string[];
+}
+
+export interface AudioNote {
+  id: string;
+  title: string;
+  date: string;
+  audioData: string; // Base64 encoded audio data
+  duration: number;
 }
 
 // Mock data that simulates what would come from MongoDB
@@ -54,6 +61,9 @@ const mockNotes: Note[] = [
     ]
   }
 ];
+
+// Mock audio notes array (in a real app this would be in MongoDB)
+const mockAudioNotes: AudioNote[] = [];
 
 // Get all notes
 export const getNotes = async (): Promise<Note[]> => {
@@ -103,4 +113,24 @@ export const deleteNote = async (id: string): Promise<boolean> => {
   }
   
   return false;
+};
+
+// Add new function to save audio recording
+export const saveAudioRecording = async (audioData: string, duration: number): Promise<AudioNote> => {
+  console.log("Saving audio recording...");
+  
+  const newAudioNote: AudioNote = {
+    id: Math.random().toString(36).substring(2, 15),
+    title: `Audio Recording - ${new Date().toLocaleString()}`,
+    date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+    audioData,
+    duration,
+  };
+  
+  // In a real app, this would be saved to MongoDB
+  mockAudioNotes.push(newAudioNote);
+  
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 300));
+  return newAudioNote;
 };
