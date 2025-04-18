@@ -1,7 +1,7 @@
 
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Camera, Upload, Check, ScanLine, ImagePlus } from "lucide-react";
+import { Upload, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 
 interface NotesScannerProps {
@@ -11,63 +11,7 @@ interface NotesScannerProps {
 const NotesScanner = ({ onProcessed }: NotesScannerProps) => {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [streamActive, setStreamActive] = useState(false);
-  
-  const startCamera = async () => {
-    try {
-      // Stop any existing stream
-      stopCamera();
-      
-      // Request camera access
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
-      });
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-        setStreamActive(true);
-        toast.success("Camera activated");
-      }
-    } catch (error) {
-      console.error("Camera error:", error);
-      toast.error("Could not access camera. Please check permissions or try uploading an image.");
-    }
-  };
-
-  const stopCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      const tracks = stream.getTracks();
-      tracks.forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-      setStreamActive(false);
-    }
-  };
-
-  const handleCapture = () => {
-    if (!streamActive) {
-      startCamera();
-      return;
-    }
-    
-    if (videoRef.current) {
-      const canvas = document.createElement('canvas');
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(videoRef.current, 0, 0);
-        const imageDataUrl = canvas.toDataURL('image/jpeg');
-        setCapturedImage(imageDataUrl);
-        stopCamera();
-        processImage(imageDataUrl);
-      }
-    }
-  };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -90,7 +34,7 @@ const NotesScanner = ({ onProcessed }: NotesScannerProps) => {
     // Simulate processing
     setTimeout(() => {
       setIsProcessing(false);
-      onProcessed(imageUrl); // Pass the image URL to the parent component
+      onProcessed(imageUrl);
       toast.success("Image processed successfully");
     }, 1500);
   };
@@ -107,58 +51,23 @@ const NotesScanner = ({ onProcessed }: NotesScannerProps) => {
     <div className="flex flex-col items-center">
       {!capturedImage ? (
         <div className="w-full space-y-6">
-          {streamActive ? (
-            <div className="relative rounded-lg overflow-hidden border-2 border-primary">
-              <video 
-                ref={videoRef} 
-                className="w-full h-64 object-cover" 
-                playsInline
-                autoPlay
-                muted
-              />
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <ScanLine className="h-16 w-16 text-primary animate-pulse opacity-80" />
-              </div>
-              
-              {/* Add a prominent floating action button for taking pictures */}
-              <div className="absolute bottom-4 left-0 right-0 flex justify-center">
-                <Button 
-                  onClick={handleCapture}
-                  size="lg" 
-                  className="bg-primary hover:bg-primary/90 text-white rounded-full h-16 w-16 p-0 shadow-lg"
-                >
-                  <Camera className="h-8 w-8" />
-                </Button>
-              </div>
+          <div className="rounded-lg border-2 border-dashed border-muted-foreground p-8 text-center space-y-6">
+            <div className="flex flex-col items-center">
+              <Upload className="h-16 w-16 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium">Upload Your Notes</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Upload an image of your written notes
+              </p>
             </div>
-          ) : (
-            <div className="rounded-lg border-2 border-dashed border-muted-foreground p-8 text-center space-y-6">
-              <div className="flex flex-col items-center">
-                <ScanLine className="h-16 w-16 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium">Scan Your Notes</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Take a picture of your written notes or upload an image
-                </p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Button 
-                  onClick={startCamera} 
-                  className="w-full"
-                >
-                  <Camera className="h-4 w-4 mr-2" />
-                  Use Camera
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full"
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload Image
-                </Button>
-              </div>
-            </div>
-          )}
+            <Button 
+              variant="default" 
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full max-w-sm mx-auto"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Upload Image
+            </Button>
+          </div>
           <input 
             type="file" 
             ref={fileInputRef} 
@@ -172,7 +81,7 @@ const NotesScanner = ({ onProcessed }: NotesScannerProps) => {
           <div className="relative">
             <img 
               src={capturedImage} 
-              alt="Captured notes" 
+              alt="Uploaded notes" 
               className="w-full rounded-lg border shadow-sm"
             />
             {isProcessing && (
@@ -187,7 +96,7 @@ const NotesScanner = ({ onProcessed }: NotesScannerProps) => {
           {!isProcessing && (
             <div className="flex justify-between">
               <Button variant="outline" onClick={resetScanner}>
-                Retake
+                Upload Another
               </Button>
               <Button onClick={() => onProcessed(capturedImage)} className="bg-green-600 hover:bg-green-700">
                 <ImagePlus className="h-4 w-4 mr-2" />
