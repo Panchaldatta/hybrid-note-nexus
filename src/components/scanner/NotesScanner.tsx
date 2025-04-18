@@ -119,15 +119,17 @@ const NotesScanner = ({ onProcessed }: NotesScannerProps) => {
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <ScanLine className="h-16 w-16 text-primary animate-pulse opacity-80" />
               </div>
-              <Button 
-                onClick={handleCapture}
-                variant="default"
-                className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-primary hover:bg-primary/90 text-white"
-                size="lg"
-              >
-                <Camera className="h-6 w-6 mr-2" />
-                Take Picture
-              </Button>
+              
+              {/* Add a prominent floating action button for taking pictures */}
+              <div className="absolute bottom-4 left-0 right-0 flex justify-center">
+                <Button 
+                  onClick={handleCapture}
+                  size="lg" 
+                  className="bg-primary hover:bg-primary/90 text-white rounded-full h-16 w-16 p-0 shadow-lg"
+                >
+                  <Camera className="h-8 w-8" />
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="rounded-lg border-2 border-dashed border-muted-foreground p-8 text-center space-y-6">
