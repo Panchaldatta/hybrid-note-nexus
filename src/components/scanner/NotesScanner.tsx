@@ -1,11 +1,11 @@
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Camera, Upload, RotateCw, Check, ScanLine } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { Camera, Upload, Check, ScanLine } from "lucide-react";
+import { toast } from "sonner";
 
 interface NotesScannerProps {
-  onProcessed: () => void;
+  onProcessed: (imageUrl: string) => void;
 }
 
 const NotesScanner = ({ onProcessed }: NotesScannerProps) => {
@@ -14,23 +14,13 @@ const NotesScanner = ({ onProcessed }: NotesScannerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [streamActive, setStreamActive] = useState(false);
-  const [cameraError, setCameraError] = useState(false);
-  
-  useEffect(() => {
-    // Clean up function to stop camera when component unmounts
-    return () => {
-      stopCamera();
-    };
-  }, []);
   
   const startCamera = async () => {
     try {
-      setCameraError(false);
-      
-      // First stop any existing stream
+      // Stop any existing stream
       stopCamera();
       
-      // Then start a new stream
+      // Request camera access
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { facingMode: 'environment' } 
       });
@@ -39,19 +29,11 @@ const NotesScanner = ({ onProcessed }: NotesScannerProps) => {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
         setStreamActive(true);
-        toast({
-          title: "Camera activated",
-          description: "Position your notes in the frame and tap capture"
-        });
+        toast.success("Camera activated");
       }
     } catch (error) {
       console.error("Camera error:", error);
-      setCameraError(true);
-      toast({
-        variant: "destructive",
-        title: "Camera Error",
-        description: "Could not access camera. Please check permissions or try uploading an image instead."
-      });
+      toast.error("Could not access camera. Please check permissions or try uploading an image.");
     }
   };
 
@@ -105,16 +87,12 @@ const NotesScanner = ({ onProcessed }: NotesScannerProps) => {
   const processImage = (imageUrl: string) => {
     setIsProcessing(true);
     
-    // Simulate processing with a longer time to seem more realistic
+    // Simulate processing
     setTimeout(() => {
       setIsProcessing(false);
-      onProcessed();
-      toast({
-        title: "Processing complete",
-        description: "Your notes have been processed successfully",
-        action: <Check className="h-4 w-4 text-green-500" />
-      });
-    }, 2500);
+      onProcessed(imageUrl); // Pass the image URL to the parent component
+      toast.success("Image processed successfully");
+    }, 1500);
   };
 
   const resetScanner = () => {
@@ -133,15 +111,13 @@ const NotesScanner = ({ onProcessed }: NotesScannerProps) => {
             <div className="relative rounded-lg overflow-hidden border-2 border-primary">
               <video 
                 ref={videoRef} 
-                className="w-full h-full" 
+                className="w-full h-64 object-cover" 
                 playsInline
                 autoPlay
                 muted
               />
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="h-full w-full flex items-center justify-center">
-                  <ScanLine className="h-16 w-16 text-primary animate-pulse opacity-80" />
-                </div>
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <ScanLine className="h-16 w-16 text-primary animate-pulse opacity-80" />
               </div>
               <Button 
                 onClick={handleCapture}
@@ -158,14 +134,13 @@ const NotesScanner = ({ onProcessed }: NotesScannerProps) => {
                 <ScanLine className="h-16 w-16 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium">Scan Your Notes</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Use your camera to capture notes or upload an image
+                  Take a picture of your written notes or upload an image
                 </p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Button 
                   onClick={startCamera} 
                   className="w-full"
-                  disabled={cameraError}
                 >
                   <Camera className="h-4 w-4 mr-2" />
                   Use Camera
@@ -179,11 +154,6 @@ const NotesScanner = ({ onProcessed }: NotesScannerProps) => {
                   Upload Image
                 </Button>
               </div>
-              {cameraError && (
-                <p className="text-sm text-destructive">
-                  Camera access failed. Please check your permissions or use the upload option.
-                </p>
-              )}
             </div>
           )}
           <input 
@@ -205,7 +175,7 @@ const NotesScanner = ({ onProcessed }: NotesScannerProps) => {
             {isProcessing && (
               <div className="absolute inset-0 bg-background/80 flex items-center justify-center rounded-lg">
                 <div className="flex flex-col items-center">
-                  <RotateCw className="h-8 w-8 animate-spin text-primary mb-2" />
+                  <div className="animate-spin text-primary mb-2 h-8 w-8 border-2 border-current border-t-transparent rounded-full"></div>
                   <p>Processing your notes...</p>
                 </div>
               </div>
@@ -215,6 +185,10 @@ const NotesScanner = ({ onProcessed }: NotesScannerProps) => {
             <div className="flex justify-between">
               <Button variant="outline" onClick={resetScanner}>
                 Retake
+              </Button>
+              <Button onClick={() => onProcessed(capturedImage)}>
+                <Check className="h-4 w-4 mr-2" />
+                Use This Image
               </Button>
             </div>
           )}

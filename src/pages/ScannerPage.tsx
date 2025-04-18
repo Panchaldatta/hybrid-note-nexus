@@ -1,19 +1,25 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import NotesScanner from "@/components/scanner/NotesScanner";
 import { Button } from "@/components/ui/button";
 import { ScanText } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { addNote } from "@/services/mongodb";
-import { toast } from "@/components/ui/use-toast";
-import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 const ScannerPage = () => {
   const [hasProcessedImage, setHasProcessedImage] = useState(false);
+  const [capturedImageUrl, setCapturedImageUrl] = useState<string | null>(null);
   const [noteTitle, setNoteTitle] = useState("Scanned Notes");
   const [isSaving, setIsSaving] = useState(false);
   const navigate = useNavigate();
+
+  const handleProcessed = (imageUrl: string) => {
+    setHasProcessedImage(true);
+    setCapturedImageUrl(imageUrl);
+  };
 
   const handleSaveNote = async () => {
     try {
@@ -27,23 +33,17 @@ const ScannerPage = () => {
         date: formattedDate,
         type: 'scan',
         excerpt: "Scanned handwritten notes",
+        imageUrls: capturedImageUrl ? [capturedImageUrl] : undefined
       });
       
-      toast({
-        title: "Note saved successfully",
-        description: "Your scanned note has been saved to your library"
-      });
+      toast.success("Note saved successfully!");
       
       // After a short delay, navigate to the notes page
       setTimeout(() => {
         navigate('/notes');
       }, 1000);
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to save note. Please try again."
-      });
+      toast.error("Failed to save note. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -60,9 +60,7 @@ const ScannerPage = () => {
       
       <Card>
         <CardContent className="p-6">
-          <NotesScanner 
-            onProcessed={() => setHasProcessedImage(true)}
-          />
+          <NotesScanner onProcessed={handleProcessed} />
           
           {hasProcessedImage && (
             <div className="mt-6 space-y-4">
