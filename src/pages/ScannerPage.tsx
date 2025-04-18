@@ -3,8 +3,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NotesScanner from "@/components/scanner/NotesScanner";
 import { Button } from "@/components/ui/button";
-import { ScanText } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { ScanText, Save, ImagePlus, ArrowLeft } from "lucide-react";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { addNote } from "@/services/mongodb";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -19,6 +19,7 @@ const ScannerPage = () => {
   const handleProcessed = (imageUrl: string) => {
     setHasProcessedImage(true);
     setCapturedImageUrl(imageUrl);
+    toast.success("Image captured! Add a title and save to your notes.");
   };
 
   const handleSaveNote = async () => {
@@ -49,6 +50,12 @@ const ScannerPage = () => {
     }
   };
 
+  const handleCancel = () => {
+    setHasProcessedImage(false);
+    setCapturedImageUrl(null);
+    setNoteTitle("Scanned Notes");
+  };
+
   return (
     <div className="container mx-auto max-w-4xl">
       <div className="flex justify-between items-center mb-6">
@@ -60,10 +67,18 @@ const ScannerPage = () => {
       
       <Card>
         <CardContent className="p-6">
-          <NotesScanner onProcessed={handleProcessed} />
-          
-          {hasProcessedImage && (
-            <div className="mt-6 space-y-4">
+          {hasProcessedImage ? (
+            <div className="space-y-6">
+              {capturedImageUrl && (
+                <div className="rounded-lg overflow-hidden border">
+                  <img 
+                    src={capturedImageUrl} 
+                    alt="Captured notes" 
+                    className="w-full object-contain"
+                  />
+                </div>
+              )}
+              
               <div className="space-y-2">
                 <label htmlFor="note-title" className="text-sm font-medium">
                   Note Title
@@ -73,21 +88,43 @@ const ScannerPage = () => {
                   value={noteTitle}
                   onChange={(e) => setNoteTitle(e.target.value)}
                   className="max-w-md"
+                  placeholder="Enter a title for your note"
                 />
               </div>
-              
-              <div className="flex justify-end">
-                <Button 
-                  onClick={handleSaveNote} 
-                  disabled={isSaving}
-                  className="min-w-[120px]"
-                >
-                  {isSaving ? "Saving..." : "Save Note"}
-                </Button>
-              </div>
             </div>
+          ) : (
+            <NotesScanner onProcessed={handleProcessed} />
           )}
         </CardContent>
+        
+        {hasProcessedImage && (
+          <CardFooter className="flex justify-between px-6 pb-6 pt-0">
+            <Button 
+              variant="outline" 
+              onClick={handleCancel}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Go Back
+            </Button>
+            <Button 
+              onClick={handleSaveNote} 
+              disabled={isSaving}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {isSaving ? (
+                <>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save to Notes
+                </>
+              )}
+            </Button>
+          </CardFooter>
+        )}
       </Card>
     </div>
   );

@@ -1,7 +1,7 @@
 
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Camera, Upload, Check, ScanLine } from "lucide-react";
+import { Camera, Upload, Check, ScanLine, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 
 interface NotesScannerProps {
@@ -121,11 +121,12 @@ const NotesScanner = ({ onProcessed }: NotesScannerProps) => {
               </div>
               <Button 
                 onClick={handleCapture}
-                className="absolute bottom-4 left-1/2 transform -translate-x-1/2"
+                variant="default"
+                className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-primary hover:bg-primary/90 text-white"
                 size="lg"
               >
-                <Camera className="h-4 w-4 mr-2" />
-                Capture
+                <Camera className="h-6 w-6 mr-2" />
+                Take Picture
               </Button>
             </div>
           ) : (
@@ -186,8 +187,8 @@ const NotesScanner = ({ onProcessed }: NotesScannerProps) => {
               <Button variant="outline" onClick={resetScanner}>
                 Retake
               </Button>
-              <Button onClick={() => onProcessed(capturedImage)}>
-                <Check className="h-4 w-4 mr-2" />
+              <Button onClick={() => onProcessed(capturedImage)} className="bg-green-600 hover:bg-green-700">
+                <ImagePlus className="h-4 w-4 mr-2" />
                 Use This Image
               </Button>
             </div>
