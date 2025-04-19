@@ -71,7 +71,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete a note
+// Delete a note - fixed to use deleteOne instead of remove()
 router.delete('/:id', async (req, res) => {
   try {
     const note = await Note.findById(req.params.id);
@@ -89,8 +89,8 @@ router.delete('/:id', async (req, res) => {
       });
     }
     
-    // Delete the note
-    await note.remove();
+    // Delete the note using deleteOne() instead of remove()
+    await Note.deleteOne({ _id: req.params.id });
     res.json({ message: 'Note deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });

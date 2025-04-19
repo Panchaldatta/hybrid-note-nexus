@@ -39,13 +39,17 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// MongoDB Connection
+// MongoDB Connection with updated options
 mongoose
-  .connect(process.env.MONGODB_URI)
+  .connect(process.env.MONGODB_URI, {
+    // These are the recommended options for newer MongoDB versions
+    serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+    socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+  })
   .then(() => console.log('MongoDB connected successfully'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
-// Import routes
+// Fix Note deletion in route
 const notesRoutes = require('./routes/notes');
 const audioRoutes = require('./routes/audio');
 
