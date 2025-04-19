@@ -1,73 +1,175 @@
-# Welcome to your Lovable project
 
-## Project info
+# Study Notes App - Full Stack Project
 
-**URL**: https://lovable.dev/projects/a32384d7-b399-494c-9c01-6cb92c8957e7
+A full-featured note-taking application with audio recording and scanning capabilities.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- Record audio and save as notes
+- Generate transcripts from audio recordings
+- Upload and process scanned notes
+- Full CRUD operations for notes
+- MongoDB database integration
+- RESTful API backend
 
-**Use Lovable**
+## Project Structure
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/a32384d7-b399-494c-9c01-6cb92c8957e7) and start prompting.
+```
+.
+├── backend/                # Backend code
+│   ├── models/             # MongoDB models
+│   ├── routes/             # API routes
+│   ├── uploads/            # Uploaded files storage
+│   ├── server.js           # Express server
+│   └── package.json        # Backend dependencies
+│
+├── src/                    # Frontend code (React)
+│   ├── components/         # React components
+│   ├── pages/              # Page components
+│   ├── services/           # API services
+│   └── ...
+│
+├── package.json            # Frontend dependencies
+└── ...
+```
 
-Changes made via Lovable will be committed automatically to this repo.
+## Getting Started
 
-**Use your preferred IDE**
+### Prerequisites
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- Node.js (v14 or higher)
+- MongoDB (local or MongoDB Atlas connection)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Setting up the Backend
 
-Follow these steps:
+1. Navigate to the backend directory:
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+cd backend
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+2. Install dependencies:
 
-# Step 3: Install the necessary dependencies.
-npm i
+```sh
+npm install
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+3. Create a `.env` file in the backend directory with the following content:
+
+```
+MONGODB_URI=mongodb://localhost:27017/study_notes_app
+PORT=5000
+```
+
+Replace the MongoDB URI with your own if using MongoDB Atlas.
+
+4. Start the backend server:
+
+```sh
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The server will run on http://localhost:5000
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Setting up the Frontend
 
-**Use GitHub Codespaces**
+1. In the project root, install frontend dependencies:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```sh
+npm install
+```
 
-## What technologies are used for this project?
+2. Add axios as a dependency:
 
-This project is built with:
+```sh
+npm install axios
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+3. Start the frontend development server:
 
-## How can I deploy this project?
+```sh
+npm run dev
+```
 
-Simply open [Lovable](https://lovable.dev/projects/a32384d7-b399-494c-9c01-6cb92c8957e7) and click on Share -> Publish.
+The frontend will run on http://localhost:5173
 
-## Can I connect a custom domain to my Lovable project?
+## API Documentation
 
-Yes, you can!
+### Notes API
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+| Endpoint | Method | Description | Request Body | Response |
+|----------|--------|-------------|--------------|----------|
+| `/api/notes` | GET | Get all notes | - | Array of Note objects |
+| `/api/notes/:id` | GET | Get a note by ID | - | Note object |
+| `/api/notes` | POST | Create a new note | Note object | Created Note object |
+| `/api/notes/:id` | PUT | Update a note | Updated Note object | Updated Note object |
+| `/api/notes/:id` | DELETE | Delete a note | - | Success message |
+| `/api/notes/upload-images` | POST | Upload images for scanned notes | Form data with images | Array of image URLs |
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### Audio API
+
+| Endpoint | Method | Description | Request Body | Response |
+|----------|--------|-------------|--------------|----------|
+| `/api/audio` | GET | Get all audio recordings | - | Array of AudioRecording objects |
+| `/api/audio/:id` | GET | Get an audio recording by ID | - | AudioRecording object |
+| `/api/audio/upload` | POST | Upload an audio file | Form data with audio file | Audio URL |
+| `/api/audio/save-base64` | POST | Save audio recording with base64 data | { title, date, audioData, duration } | Saved AudioRecording object |
+| `/api/audio/generate-transcript/:id` | POST | Generate transcript from audio | - | { transcript } |
+| `/api/audio/save-with-note` | POST | Save audio with associated note | { title, date, audioData, duration, transcript } | { note, recording } |
+
+## Data Models
+
+### Note
+
+```typescript
+{
+  id: string;
+  title: string;
+  date: string;
+  type: 'audio' | 'scan';
+  excerpt: string;
+  content?: string;
+  audioUrl?: string;
+  imageUrls?: string[];
+}
+```
+
+### AudioRecording
+
+```typescript
+{
+  id: string;
+  title: string;
+  date: string;
+  filename: string;
+  duration: number;
+  transcript?: string;
+  noteId?: string;
+}
+```
+
+## Frontend-Backend Integration
+
+The frontend uses axios to communicate with the backend. The API service is implemented in `src/services/mongodb.ts`.
+
+## Deployment
+
+### Backend Deployment
+
+1. Set up a MongoDB database on MongoDB Atlas
+2. Deploy the backend to a hosting service like Heroku, Render, or Railway
+3. Set the environment variables on your hosting platform
+
+### Frontend Deployment
+
+1. Build the frontend:
+
+```sh
+npm run build
+```
+
+2. Deploy the built files to a static hosting service like Vercel, Netlify, or GitHub Pages
+
+## License
+
+This project is licensed under the MIT License.

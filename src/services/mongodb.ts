@@ -1,5 +1,8 @@
-// Note: This is a mock implementation for frontend use
-// In a real application, you would use an API to communicate with MongoDB
+
+// Real implementation for communicating with MongoDB via API
+import axios from 'axios';
+
+const API_URL = 'http://localhost:5000/api';
 
 export interface Note {
   id: string;
@@ -20,117 +23,191 @@ export interface AudioNote {
   duration: number;
 }
 
-// Mock data that simulates what would come from MongoDB
-const mockNotes: Note[] = [
-  {
-    id: "1",
-    title: "Quantum Mechanics Lecture",
-    date: "April 15, 2025",
-    type: "audio",
-    excerpt: "Wave-particle duality and the double-slit experiment...",
-    audioUrl: "https://example.com/audio/lecture1.mp3",
-    content: "Full lecture content on quantum mechanics and its applications."
-  },
-  {
-    id: "2",
-    title: "Calculus Notes",
-    date: "April 14, 2025",
-    type: "scan",
-    excerpt: "Integration by parts and applications...",
-    imageUrls: [
-      "https://images.unsplash.com/photo-1635070041078-e363dbe005cb",
-      "https://images.unsplash.com/photo-1621452773781-0f992fd1f5cb"
-    ]
-  },
-  {
-    id: "3",
-    title: "Machine Learning Seminar",
-    date: "April 10, 2025",
-    type: "audio",
-    excerpt: "Introduction to neural networks and deep learning frameworks...",
-    audioUrl: "https://example.com/audio/seminar2.mp3"
-  },
-  {
-    id: "4",
-    title: "Biology Study Notes",
-    date: "April 8, 2025",
-    type: "scan",
-    excerpt: "Cell structure and function, mitosis and meiosis processes...",
-    imageUrls: [
-      "https://images.unsplash.com/photo-1530026405186-ed1f139313f8"
-    ]
-  }
-];
-
-// Mock audio notes array (in a real app this would be in MongoDB)
-const mockAudioNotes: AudioNote[] = [];
-
-// Get all notes
+// Fetch all notes from the API
 export const getNotes = async (): Promise<Note[]> => {
-  console.log("Fetching notes...");
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return [...mockNotes];
+  try {
+    console.log("Fetching notes from API...");
+    const response = await axios.get(`${API_URL}/notes`);
+    
+    // Transform MongoDB _id to id for frontend compatibility
+    const notes = response.data.map((note: any) => ({
+      id: note._id,
+      title: note.title,
+      date: note.date,
+      type: note.type,
+      excerpt: note.excerpt,
+      content: note.content,
+      audioUrl: note.audioUrl,
+      imageUrls: note.imageUrls,
+    }));
+    
+    return notes;
+  } catch (error) {
+    console.error("Error fetching notes:", error);
+    throw error;
+  }
 };
 
 // Add a new note
 export const addNote = async (note: Omit<Note, 'id'>): Promise<Note> => {
-  console.log("Adding note:", note);
-  
-  // Generate a random ID (in a real app this would be handled by MongoDB)
-  const newNote = {
-    ...note,
-    id: Math.random().toString(36).substring(2, 15),
-  };
-  
-  // Add to mock database
-  mockNotes.unshift(newNote); // Add to beginning of array
-  
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 300));
-  return newNote;
+  try {
+    console.log("Adding note via API:", note);
+    const response = await axios.post(`${API_URL}/notes`, note);
+    
+    // Transform MongoDB _id to id for frontend compatibility
+    return {
+      id: response.data._id,
+      title: response.data.title,
+      date: response.data.date,
+      type: response.data.type,
+      excerpt: response.data.excerpt,
+      content: response.data.content,
+      audioUrl: response.data.audioUrl,
+      imageUrls: response.data.imageUrls,
+    };
+  } catch (error) {
+    console.error("Error adding note:", error);
+    throw error;
+  }
 };
 
 // Get a note by ID
 export const getNoteById = async (id: string): Promise<Note | undefined> => {
-  console.log("Fetching note by ID:", id);
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 300));
-  return mockNotes.find(note => note.id === id);
+  try {
+    console.log("Fetching note by ID from API:", id);
+    const response = await axios.get(`${API_URL}/notes/${id}`);
+    
+    if (!response.data) {
+      return undefined;
+    }
+    
+    // Transform MongoDB _id to id for frontend compatibility
+    return {
+      id: response.data._id,
+      title: response.data.title,
+      date: response.data.date,
+      type: response.data.type,
+      excerpt: response.data.excerpt,
+      content: response.data.content,
+      audioUrl: response.data.audioUrl,
+      imageUrls: response.data.imageUrls,
+    };
+  } catch (error) {
+    console.error("Error fetching note by ID:", error);
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return undefined;
+    }
+    throw error;
+  }
 };
 
 // Delete a note
 export const deleteNote = async (id: string): Promise<boolean> => {
-  console.log("Deleting note:", id);
-  const initialLength = mockNotes.length;
-  const index = mockNotes.findIndex(note => note.id === id);
-  
-  if (index !== -1) {
-    mockNotes.splice(index, 1);
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
+  try {
+    console.log("Deleting note via API:", id);
+    await axios.delete(`${API_URL}/notes/${id}`);
     return true;
+  } catch (error) {
+    console.error("Error deleting note:", error);
+    return false;
   }
-  
-  return false;
 };
 
-// Add new function to save audio recording
+// Save audio recording
 export const saveAudioRecording = async (audioData: string, duration: number): Promise<AudioNote> => {
-  console.log("Saving audio recording...");
-  
-  const newAudioNote: AudioNote = {
-    id: Math.random().toString(36).substring(2, 15),
-    title: `Audio Recording - ${new Date().toLocaleString()}`,
-    date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-    audioData,
-    duration,
-  };
-  
-  // In a real app, this would be saved to MongoDB
-  mockAudioNotes.push(newAudioNote);
-  
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 300));
-  return newAudioNote;
+  try {
+    console.log("Saving audio recording via API...");
+    
+    const formattedDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const title = `Audio Recording - ${new Date().toLocaleString()}`;
+    
+    const response = await axios.post(`${API_URL}/audio/save-base64`, {
+      audioData,
+      duration,
+      title,
+      date: formattedDate
+    });
+    
+    return {
+      id: response.data.id,
+      title: response.data.title,
+      date: response.data.date,
+      audioData,
+      duration
+    };
+  } catch (error) {
+    console.error("Error saving audio recording:", error);
+    throw error;
+  }
+};
+
+// Save audio recording with note
+export const saveAudioWithNote = async (
+  audioData: string, 
+  duration: number, 
+  title: string, 
+  transcript?: string
+): Promise<{ note: Note, recording: any }> => {
+  try {
+    console.log("Saving audio with note via API...");
+    
+    const formattedDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    
+    const response = await axios.post(`${API_URL}/audio/save-with-note`, {
+      audioData,
+      duration,
+      title,
+      date: formattedDate,
+      transcript
+    });
+    
+    // Transform MongoDB _id to id for frontend compatibility
+    const note = {
+      id: response.data.note._id,
+      title: response.data.note.title,
+      date: response.data.note.date,
+      type: response.data.note.type,
+      excerpt: response.data.note.excerpt,
+      content: response.data.note.content,
+      audioUrl: response.data.note.audioUrl,
+      imageUrls: response.data.note.imageUrls,
+    };
+    
+    return { note, recording: response.data.recording };
+  } catch (error) {
+    console.error("Error saving audio with note:", error);
+    throw error;
+  }
+};
+
+// Upload images for scanned notes
+export const uploadImages = async (files: File[]): Promise<string[]> => {
+  try {
+    const formData = new FormData();
+    files.forEach(file => {
+      formData.append('images', file);
+    });
+    
+    const response = await axios.post(`${API_URL}/notes/upload-images`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    
+    return response.data.imageUrls;
+  } catch (error) {
+    console.error("Error uploading images:", error);
+    throw error;
+  }
+};
+
+// Generate transcript from audio (mock for now)
+export const generateTranscript = async (audioId: string): Promise<string> => {
+  try {
+    const response = await axios.post(`${API_URL}/audio/generate-transcript/${audioId}`);
+    return response.data.transcript;
+  } catch (error) {
+    console.error("Error generating transcript:", error);
+    throw error;
+  }
 };

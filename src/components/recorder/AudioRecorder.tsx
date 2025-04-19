@@ -1,12 +1,16 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Mic, Square, Upload, Play, Pause } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { saveAudioRecording } from "@/services/mongodb";
 
-const AudioRecorder = () => {
+interface AudioRecorderProps {
+  onRecordingComplete?: (audioData: string, duration: number) => void;
+}
+
+const AudioRecorder = ({ onRecordingComplete }: AudioRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioSrc, setAudioSrc] = useState<string | null>(null);
@@ -46,19 +50,20 @@ const AudioRecorder = () => {
       mediaRecorderRef.current.addEventListener("stop", async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: "audio/mpeg" });
         
+        // Convert blob to base64 for API submission
         const reader = new FileReader();
         reader.readAsDataURL(audioBlob);
-        reader.onloadend = async () => {
+        reader.onloadend = () => {
           const base64Audio = reader.result as string;
-          try {
-            const savedNote = await saveAudioRecording(base64Audio, recordingTime);
-            setAudioSrc(URL.createObjectURL(audioBlob));
-            setAudioBlob(audioBlob);
-            toast.success("Recording saved successfully");
-          } catch (error) {
-            console.error("Error saving recording:", error);
-            toast.error("Failed to save recording");
+          setAudioSrc(URL.createObjectURL(audioBlob));
+          setAudioBlob(audioBlob);
+          
+          // Pass the audio data and duration to parent component
+          if (onRecordingComplete) {
+            onRecordingComplete(base64Audio, recordingTime);
           }
+          
+          toast.success("Recording completed");
         };
         
         stream.getTracks().forEach(track => track.stop());
@@ -105,6 +110,27 @@ const AudioRecorder = () => {
         const audioUrl = URL.createObjectURL(file);
         setAudioSrc(audioUrl);
         setAudioBlob(file);
+        
+        // Convert the file to base64
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onloadend = () => {
+          const base64Audio = reader.result as string;
+          
+          // Get audio duration
+          const audio = new Audio();
+          audio.src = audioUrl;
+          audio.onloadedmetadata = () => {
+            const duration = Math.round(audio.duration);
+            setRecordingTime(duration);
+            
+            // Pass the audio data and duration to parent component
+            if (onRecordingComplete) {
+              onRecordingComplete(base64Audio, duration);
+            }
+          };
+        };
+        
         toast.success("Audio uploaded");
       }
     };
@@ -172,6 +198,7 @@ const AudioRecorder = () => {
             variant="default" 
             size="lg" 
             className="gap-2"
+            disabled={audioSrc !== null}
           >
             <Mic className="h-5 w-5" />
             Start Recording
@@ -195,6 +222,7 @@ const AudioRecorder = () => {
           variant="outline" 
           onClick={handleUploadAudio}
           className="gap-2"
+          disabled={isRecording || audioSrc !== null}
         >
           <Upload className="h-4 w-4" />
           Upload Audio
