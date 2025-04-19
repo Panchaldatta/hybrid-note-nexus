@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,7 @@ interface SpeakerSegment {
 interface TranscriptViewerProps {
   title?: string;
   transcript?: SpeakerSegment[];
+  onTranscriptGenerated?: (text: string) => void;
 }
 
 const defaultTranscript: SpeakerSegment[] = [
@@ -53,10 +54,19 @@ const defaultTranscript: SpeakerSegment[] = [
 
 const TranscriptViewer = ({ 
   title = "Quantum Mechanics Lecture", 
-  transcript = defaultTranscript 
+  transcript = defaultTranscript,
+  onTranscriptGenerated
 }: TranscriptViewerProps) => {
   const [favorites, setFavorites] = useState<number[]>([]);
   const [activeTab, setActiveTab] = useState("transcript");
+
+  // Call onTranscriptGenerated with the full transcript text when component mounts
+  useEffect(() => {
+    if (onTranscriptGenerated && transcript) {
+      const fullText = transcript.map(segment => `${segment.speaker}: ${segment.text}`).join('\n');
+      onTranscriptGenerated(fullText);
+    }
+  }, [transcript, onTranscriptGenerated]);
 
   const toggleFavorite = (index: number) => {
     if (favorites.includes(index)) {
